@@ -219,7 +219,7 @@ function MobileCarousel({ onOpen }) {
       style={{
         padding: '3rem 0 2rem',
         position: 'relative',
-        height: '70vw',
+        height: '85vw',
         overflow: 'hidden',
         perspective: '800px',
       }}
@@ -252,8 +252,8 @@ function MobileCarousel({ onOpen }) {
               position: 'absolute',
               left: '50%',
               top: '50%',
-              width: '60vw',
-              height: '60vw',
+              width: '78vw',
+              height: '78vw',
               transform: `translate(-50%, -50%) translateX(${translateX}%) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
               transition: 'all 0.45s cubic-bezier(0.25, 0.1, 0.25, 1)',
               zIndex,
