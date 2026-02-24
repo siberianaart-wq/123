@@ -1,5 +1,6 @@
 'use client'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 const title = "SI.BERIANA"
 const subtitle = "LIVING GALLERY"
@@ -67,22 +68,27 @@ export default function Entrance(){
           </motion.span>
         ))}
       </div>
-      <motion.p
-        variants={subtitleVariants}
-        initial="hidden"
-        animate="visible"
-        style={{
-          fontSize: 'clamp(0.55rem, 1.5vw, 1.1rem)',
-          letterSpacing: 'clamp(0.2em, 0.45em, 0.45em)',
-          fontWeight: 300,
-          color: 'rgba(255,255,255,0.5)',
-          fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-          margin: 0,
-          textAlign: 'center',
-        }}
-      >
-        {subtitle}
-      </motion.p>
+      <Link href="/gallery" style={{ textDecoration: 'none' }}>
+        <motion.p
+          variants={subtitleVariants}
+          initial="hidden"
+          animate="visible"
+          style={{
+            fontSize: 'clamp(0.55rem, 1.5vw, 1.1rem)',
+            letterSpacing: 'clamp(0.2em, 0.45em, 0.45em)',
+            fontWeight: 300,
+            color: 'rgba(255,255,255,0.5)',
+            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            margin: 0,
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'color 0.3s ease',
+          }}
+          whileHover={{ color: '#e84393' }}
+        >
+          {subtitle}
+        </motion.p>
+      </Link>
     </section>
   )
 }
