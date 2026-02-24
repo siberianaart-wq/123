@@ -4,69 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import galleryImages from '../../gallery.config'
 
-function Lightbox({ src, onClose }) {
-  useEffect(() => {
-    const handleKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [onClose])
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.92)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        cursor: 'pointer',
-      }}
-    >
-      <motion.img
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.5, opacity: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-        src={src}
-        alt="Expanded work"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          maxWidth: '85vw',
-          maxHeight: '85vh',
-          objectFit: 'contain',
-          borderRadius: 6,
-          boxShadow: '0 20px 80px rgba(0,0,0,0.8)',
-          cursor: 'default',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          top: '2rem',
-          right: '2rem',
-          color: 'rgba(255,255,255,0.6)',
-          fontSize: '1.5rem',
-          fontWeight: 200,
-          fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-          cursor: 'pointer',
-          zIndex: 1001,
-          lineHeight: 1,
-        }}
-        onClick={onClose}
-      >
-        ✕
-      </div>
-    </motion.div>
-  )
-}
-
 export default function GalleryGrid() {
   const [openIndex, setOpenIndex] = useState(null)
   const [columns, setColumns] = useState(3)
@@ -82,6 +19,12 @@ export default function GalleryGrid() {
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
+  }, [])
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') setOpenIndex(null) }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
   const canExpand = !isMobile && columns < 6
@@ -190,7 +133,8 @@ export default function GalleryGrid() {
               borderRadius: 2,
             }}
           >
-            <img
+            <motion.img
+              layoutId={`gallery-img-${i}`}
               src={src}
               alt={`Work ${i + 1}`}
               style={{
@@ -216,10 +160,61 @@ export default function GalleryGrid() {
 
       <AnimatePresence>
         {openIndex !== null && (
-          <Lightbox
-            src={galleryImages[openIndex]}
-            onClose={() => setOpenIndex(null)}
-          />
+          <motion.div
+            key="lightbox-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setOpenIndex(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.92)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              cursor: 'pointer',
+            }}
+          >
+            <motion.img
+              layoutId={`gallery-img-${openIndex}`}
+              src={galleryImages[openIndex]}
+              alt="Expanded work"
+              onClick={(e) => e.stopPropagation()}
+              transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+              style={{
+                maxWidth: '85vw',
+                maxHeight: '85vh',
+                objectFit: 'contain',
+                borderRadius: 8,
+                boxShadow: '0 20px 80px rgba(0,0,0,0.8)',
+                cursor: 'default',
+              }}
+            />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              style={{
+                position: 'absolute',
+                top: '2rem',
+                right: '2rem',
+                color: 'rgba(255,255,255,0.6)',
+                fontSize: '1.5rem',
+                fontWeight: 200,
+                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                cursor: 'pointer',
+                zIndex: 1001,
+                lineHeight: 1,
+              }}
+              onClick={() => setOpenIndex(null)}
+            >
+              ✕
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
