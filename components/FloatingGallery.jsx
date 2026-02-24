@@ -3,14 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import galleryImages from '../gallery.config'
 
-function seededRandom(seed) {
-  let s = seed
-  return () => {
-    s = (s * 16807 + 0) % 2147483647
-    return (s - 1) / 2147483646
-  }
-}
-
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
@@ -22,70 +14,43 @@ function useIsMobile() {
   return isMobile
 }
 
-const baseSizes = [
-  { width: 680, height: 500 },
-  { width: 360, height: 400 },
-  { width: 440, height: 300 },
-  { width: 320, height: 440 },
-  { width: 400, height: 360 },
-  { width: 500, height: 350 },
-  { width: 380, height: 420 },
-  { width: 460, height: 310 },
-]
-
-function generateCardConfigs(count) {
-  const configs = []
-  const rng = seededRandom(42)
-
-  for (let i = 0; i < count; i++) {
-    const size = baseSizes[i % baseSizes.length]
-    const angleSpread = 360 / count
-    configs.push({
-      radiusX: 300 + rng() * 120,
-      radiusY: 150 + rng() * 70,
-      speed: 40 + rng() * 30,
-      startAngle: i * angleSpread,
-      width: size.width,
-      height: size.height,
-      yOffset: -100 + i * (900 / Math.max(count - 1, 1)),
-    })
-  }
-  return configs
-}
-
-const basePinkSquareConfig = {
-  radiusX: 280, radiusY: 140, speed: 40, startAngle: 36, size: 180,
-}
-
-function TornadoCard({ src, config, index, onOpen, layer }) {
-  const ref = useRef(null)
-  const angleRef = useRef(config.startAngle)
-  const selfSpin = useRef(0)
+function OrbitGallery({ onOpen }) {
+  const containerRef = useRef(null)
+  const angleRef = useRef(0)
+  const cardsRef = useRef([])
+  const count = galleryImages.length + 1
 
   useEffect(() => {
     let animFrame
     let lastTime = performance.now()
-    const selfSpinSpeed = 8 + index * 3
+    const speed = 18
 
     const animate = (now) => {
       const delta = (now - lastTime) / 1000
       lastTime = now
-      angleRef.current = (angleRef.current + (360 / config.speed) * delta) % 360
-      selfSpin.current = (selfSpin.current + selfSpinSpeed * delta) % 360
-      const rad = (angleRef.current * Math.PI) / 180
-      const x = Math.cos(rad) * config.radiusX
-      const yOrbit = Math.sin(rad) * config.radiusY * 0.4
-      const y = yOrbit + config.yOffset
-      const depth = (Math.sin(rad) + 1) / 2
-      const scale = 0.7 + 0.3 * depth
+      angleRef.current = (angleRef.current + speed * delta) % 360
 
-      const rotateY = Math.sin((selfSpin.current * Math.PI) / 180) * 25
-      const rotateX = Math.cos((selfSpin.current * Math.PI) / 180) * 10
-      const rotateZ = Math.sin(rad) * 8
+      const radiusX = 520
+      const radiusY = 320
 
-      if (ref.current) {
-        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
-        ref.current.style.filter = `brightness(${0.25 + 0.2 * scale})`
+      for (let i = 0; i < count; i++) {
+        const el = cardsRef.current[i]
+        if (!el) continue
+
+        const itemAngle = angleRef.current + (i * 360) / count
+        const rad = (itemAngle * Math.PI) / 180
+
+        const x = Math.cos(rad) * radiusX
+        const y = Math.sin(rad) * radiusY * 0.45
+
+        const depth = (Math.sin(rad) + 1) / 2
+        const scale = 0.5 + 0.7 * depth
+        const zIndex = Math.round(depth * 100)
+        const brightness = 0.2 + 0.8 * depth
+
+        el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`
+        el.style.zIndex = zIndex
+        el.style.filter = `brightness(${brightness})`
       }
 
       animFrame = requestAnimationFrame(animate)
@@ -93,102 +58,72 @@ function TornadoCard({ src, config, index, onOpen, layer }) {
 
     animFrame = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(animFrame)
-  }, [config, index])
+  }, [count])
 
   return (
     <div
-      ref={ref}
-      onClick={() => onOpen(index)}
+      ref={containerRef}
       style={{
         position: 'absolute',
         left: '50%',
         top: '50%',
-        width: config.width,
-        height: config.height,
-        transformStyle: 'preserve-3d',
-        cursor: 'pointer',
-        zIndex: layer,
-        borderRadius: 16,
-        overflow: 'hidden',
+        width: 0,
+        height: 0,
       }}
     >
-      <img
-        src={src}
-        alt={`Work ${index + 1}`}
+      {galleryImages.map((src, i) => (
+        <div
+          key={i}
+          ref={(el) => { cardsRef.current[i] = el }}
+          onClick={() => onOpen(i)}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: 340,
+            height: 340,
+            cursor: 'pointer',
+            borderRadius: 16,
+            overflow: 'hidden',
+            willChange: 'transform',
+          }}
+        >
+          <img
+            src={src}
+            alt={`Work ${i + 1}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 16,
+            boxShadow: 'inset 0 0 40px 15px rgba(0,0,0,0.6)',
+            pointerEvents: 'none',
+          }} />
+        </div>
+      ))}
+      <div
+        ref={(el) => { cardsRef.current[galleryImages.length] = el }}
         style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          width: 180,
+          height: 180,
+          willChange: 'transform',
+        }}
+      >
+        <div style={{
           width: '100%',
           height: '100%',
-          objectFit: 'cover',
-        }}
-      />
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        borderRadius: 16,
-        boxShadow: 'inset 0 0 40px 15px rgba(0,0,0,0.6)',
-        pointerEvents: 'none',
-      }} />
-    </div>
-  )
-}
-
-function PinkSquare({ yOffset }) {
-  const ref = useRef(null)
-  const angleRef = useRef(basePinkSquareConfig.startAngle)
-  const selfSpin = useRef(0)
-
-  useEffect(() => {
-    let animFrame
-    let lastTime = performance.now()
-    const selfSpinSpeed = 12
-
-    const animate = (now) => {
-      const delta = (now - lastTime) / 1000
-      lastTime = now
-      angleRef.current = (angleRef.current + (360 / basePinkSquareConfig.speed) * delta) % 360
-      selfSpin.current = (selfSpin.current + selfSpinSpeed * delta) % 360
-      const rad = (angleRef.current * Math.PI) / 180
-      const x = Math.cos(rad) * basePinkSquareConfig.radiusX
-      const yOrbit = Math.sin(rad) * basePinkSquareConfig.radiusY * 0.4
-      const y = yOrbit + yOffset
-      const depth = (Math.sin(rad) + 1) / 2
-      const s = 0.7 + 0.3 * depth
-      const rotateY = Math.sin((selfSpin.current * Math.PI) / 180) * 25
-      const rotateX = Math.cos((selfSpin.current * Math.PI) / 180) * 10
-      const rotateZ = Math.sin(rad) * 8
-
-      if (ref.current) {
-        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${s})`
-        ref.current.style.filter = `brightness(${0.35 + 0.25 * s})`
-      }
-
-      animFrame = requestAnimationFrame(animate)
-    }
-
-    animFrame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(animFrame)
-  }, [yOffset])
-
-  return (
-    <div
-      ref={ref}
-      style={{
-        position: 'absolute',
-        left: '50%',
-        top: '50%',
-        width: basePinkSquareConfig.size,
-        height: basePinkSquareConfig.size,
-        transformStyle: 'preserve-3d',
-        zIndex: 3,
-      }}
-    >
-      <div style={{
-        width: '100%',
-        height: '100%',
-        background: '#e84393',
-        borderRadius: 0,
-        boxShadow: '0 12px 40px rgba(232,67,147,0.3)',
-      }} />
+          background: '#e84393',
+          boxShadow: '0 12px 40px rgba(232,67,147,0.3)',
+        }} />
+      </div>
     </div>
   )
 }
@@ -364,25 +299,12 @@ export default function FloatingGallery() {
   const isMobile = useIsMobile()
   useEffect(() => setMounted(true), [])
 
-  const cardConfigs = useMemo(() => generateCardConfigs(galleryImages.length), [])
-  const pinkYOffset = useMemo(() => {
-    if (galleryImages.length <= 1) return 0
-    const mid = Math.floor(galleryImages.length / 2)
-    return cardConfigs[mid]?.yOffset ?? 250
-  }, [cardConfigs])
-  const sectionHeight = useMemo(() => {
-    const maxY = cardConfigs.length > 0
-      ? Math.max(...cardConfigs.map(c => c.yOffset + c.height))
-      : 800
-    return Math.max(maxY + 400, 800)
-  }, [cardConfigs])
-
   const handleOpen = useCallback((i) => setOpenIndex(i), [])
   const handleClose = useCallback(() => setOpenIndex(null), [])
 
   return (
     <section style={isMobile ? {} : {
-      height: sectionHeight,
+      height: '100vh',
       position: 'relative',
       overflow: 'visible',
     }}>
@@ -413,25 +335,7 @@ export default function FloatingGallery() {
       </motion.p>
 
       {mounted && !isMobile && (
-        <div style={{
-          position: 'absolute',
-          left: '50%',
-          top: '38%',
-          width: 0,
-          height: 0,
-        }}>
-          <PinkSquare yOffset={pinkYOffset} />
-          {galleryImages.map((src, i) => (
-            <TornadoCard
-              key={i}
-              src={src}
-              config={cardConfigs[i]}
-              index={i}
-              onOpen={handleOpen}
-              layer={i + 1}
-            />
-          ))}
-        </div>
+        <OrbitGallery onOpen={handleOpen} />
       )}
 
       {mounted && isMobile && (
