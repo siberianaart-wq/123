@@ -93,29 +93,35 @@ function TornadoCard({ src, config, index }) {
 function PinkSquare() {
   const ref = useRef(null)
   const angleRef = useRef(pinkSquareConfig.startAngle)
+  const selfSpin = useRef(0)
 
   useEffect(() => {
     let animFrame
     let lastTime = performance.now()
+    const selfSpinSpeed = 12
 
     const animate = (now) => {
       const delta = (now - lastTime) / 1000
       lastTime = now
       angleRef.current = (angleRef.current + (360 / pinkSquareConfig.speed) * delta) % 360
+      selfSpin.current = (selfSpin.current + selfSpinSpeed * delta) % 360
       const rad = (angleRef.current * Math.PI) / 180
       const x = Math.cos(rad) * pinkSquareConfig.radiusX
       const yOrbit = Math.sin(rad) * pinkSquareConfig.radiusY * 0.4
       const y = yOrbit + pinkSquareConfig.yOffset
-      const scale = 0.8 + 0.2 * ((Math.sin(rad) + 1) / 2)
-      const rotation = angleRef.current * 0.3
+      const depth = (Math.sin(rad) + 1) / 2
+      const scale = 0.7 + 0.3 * depth
       const zIndex = Math.round(scale * 10)
 
-      const rotateY = Math.sin(rad * 1.5) * 20
-      const rotateX = Math.cos(rad * 1.2) * 15
+      const rotateY = Math.sin((selfSpin.current * Math.PI) / 180) * 25
+      const rotateX = Math.cos((selfSpin.current * Math.PI) / 180) * 10
+      const rotateZ = Math.sin(rad) * 8
 
       if (ref.current) {
-        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotation}deg) scale(${scale})`
+        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
         ref.current.style.zIndex = zIndex
+        ref.current.style.opacity = 0.6 + 0.4 * scale
+        ref.current.style.filter = `brightness(${0.35 + 0.25 * scale})`
       }
 
       animFrame = requestAnimationFrame(animate)
@@ -140,58 +146,10 @@ function PinkSquare() {
       <div style={{
         width: '100%',
         height: '100%',
-        position: 'relative',
-        transformStyle: 'preserve-3d',
-        transform: 'translateZ(-45px)',
-      }}>
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          background: '#e84393',
-          transform: 'translateZ(45px)',
-          boxShadow: '0 0 60px rgba(232,67,147,0.4), 0 0 120px rgba(232,67,147,0.15)',
-        }} />
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          background: '#a82d6b',
-          transform: 'translateZ(-45px)',
-        }} />
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          background: '#b52a60',
-          transform: 'rotateY(-90deg) translateZ(45px)',
-          transformOrigin: 'left center',
-        }} />
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          background: '#d43d7a',
-          transform: 'rotateY(90deg) translateZ(45px)',
-          transformOrigin: 'right center',
-        }} />
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          background: '#d43d7a',
-          transform: 'rotateX(90deg) translateZ(45px)',
-          transformOrigin: 'center top',
-        }} />
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          background: '#b52a60',
-          transform: 'rotateX(-90deg) translateZ(45px)',
-          transformOrigin: 'center bottom',
-        }} />
-      </div>
+        background: '#e84393',
+        borderRadius: 4,
+        boxShadow: '0 12px 40px rgba(232,67,147,0.5), 0 0 80px rgba(232,67,147,0.2)',
+      }} />
     </div>
   )
 }
