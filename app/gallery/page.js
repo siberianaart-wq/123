@@ -1,15 +1,17 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import galleryImages from '../../gallery.config'
 
 export default function GalleryGrid() {
   const [openIndex, setOpenIndex] = useState(null)
+  const [closingIndex, setClosingIndex] = useState(null)
   const [columns, setColumns] = useState(3)
   const [isMobile, setIsMobile] = useState(false)
   const [imgRect, setImgRect] = useState(null)
-  const imgRefs = useRef([])
+  const [viewSize, setViewSize] = useState({ vw: 400, vh: 800 })
+  const imgRefs = useRef({})
 
   useEffect(() => {
     const update = () => {
@@ -17,6 +19,7 @@ export default function GalleryGrid() {
       setIsMobile(w < 768)
       if (w < 768) setColumns(2)
       else setColumns(3)
+      setViewSize({ vw: window.innerWidth, vh: window.innerHeight })
     }
     update()
     window.addEventListener('resize', update)
@@ -24,13 +27,29 @@ export default function GalleryGrid() {
   }, [])
 
   useEffect(() => {
-    const handleKey = (e) => { if (e.key === 'Escape') setOpenIndex(null) }
+    const handleKey = (e) => { if (e.key === 'Escape') handleClose() }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
+  }, [openIndex])
+
+  const handleOpen = useCallback((i) => {
+    const el = imgRefs.current[i]
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    setImgRect({
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    })
+    setViewSize({ vw: window.innerWidth, vh: window.innerHeight })
+    setClosingIndex(null)
+    setOpenIndex(i)
   }, [])
 
-  const handleOpen = (i) => {
-    const el = imgRefs.current[i]
+  const handleClose = useCallback(() => {
+    if (openIndex === null) return
+    const el = imgRefs.current[openIndex]
     if (el) {
       const rect = el.getBoundingClientRect()
       setImgRect({
@@ -40,14 +59,14 @@ export default function GalleryGrid() {
         height: rect.height,
       })
     }
-    setOpenIndex(i)
-  }
+    setClosingIndex(openIndex)
+    setOpenIndex(null)
+  }, [openIndex])
 
   const canExpand = !isMobile && columns < 6
   const canShrink = !isMobile && columns > 3
 
-  const vw = typeof window !== 'undefined' ? window.innerWidth : 400
-  const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+  const isHidden = (i) => openIndex === i || closingIndex === i
 
   return (
     <div style={{
@@ -142,7 +161,7 @@ export default function GalleryGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.05 }}
-            ref={(el) => imgRefs.current[i] = el}
+            ref={(el) => { if (el) imgRefs.current[i] = el }}
             onClick={() => handleOpen(i)}
             style={{
               aspectRatio: '1',
@@ -161,6 +180,7 @@ export default function GalleryGrid() {
                 display: 'block',
                 transition: 'transform 0.4s ease, filter 0.4s ease',
                 filter: 'brightness(0.7)',
+                opacity: isHidden(i) ? 0 : 1,
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.transform = 'scale(1.05)'
@@ -175,7 +195,9 @@ export default function GalleryGrid() {
         ))}
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence
+        onExitComplete={() => setClosingIndex(null)}
+      >
         {openIndex !== null && imgRect && (
           <>
             <motion.div
@@ -184,7 +206,7 @@ export default function GalleryGrid() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              onClick={() => setOpenIndex(null)}
+              onClick={handleClose}
               style={{
                 position: 'fixed',
                 inset: 0,
@@ -193,21 +215,19 @@ export default function GalleryGrid() {
               }}
             />
             <motion.div
-              key="expanding-img"
+              key={`expanding-${openIndex}`}
               initial={{
-                position: 'fixed',
                 top: imgRect.top,
                 left: imgRect.left,
                 width: imgRect.width,
                 height: imgRect.height,
-                zIndex: 1000,
                 borderRadius: 2,
               }}
               animate={{
-                top: vh * 0.075,
-                left: vw * 0.075,
-                width: vw * 0.85,
-                height: vh * 0.85,
+                top: viewSize.vh * 0.075,
+                left: viewSize.vw * 0.075,
+                width: viewSize.vw * 0.85,
+                height: viewSize.vh * 0.85,
                 borderRadius: 8,
               }}
               exit={{
@@ -218,7 +238,7 @@ export default function GalleryGrid() {
                 borderRadius: 2,
               }}
               transition={{ duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
-              onClick={() => setOpenIndex(null)}
+              onClick={handleClose}
               style={{
                 position: 'fixed',
                 zIndex: 1000,
@@ -259,7 +279,7 @@ export default function GalleryGrid() {
                 zIndex: 1001,
                 lineHeight: 1,
               }}
-              onClick={() => setOpenIndex(null)}
+              onClick={handleClose}
             >
               ✕
             </motion.div>
