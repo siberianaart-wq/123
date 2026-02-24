@@ -30,8 +30,8 @@ function OrbitGallery({ onOpen }) {
       lastTime = now
       angleRef.current = (angleRef.current + speed * delta) % 360
 
-      const radiusX = 500
-      const radiusY = 380
+      const radiusX = 620
+      const radiusY = 450
 
       for (let i = 0; i < count; i++) {
         const el = cardsRef.current[i]
@@ -46,11 +46,10 @@ function OrbitGallery({ onOpen }) {
         const depth = (Math.sin(rad) + 1) / 2
         const scale = 0.35 + 1.45 * depth
         const zIndex = Math.round(depth * 100)
-        const opacity = 0.25 + 0.75 * depth
 
         el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`
         el.style.zIndex = zIndex
-        el.style.opacity = opacity
+        el.style.opacity = 1
       }
 
       animFrame = requestAnimationFrame(animate)
