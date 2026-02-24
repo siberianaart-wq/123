@@ -25,25 +25,32 @@ const pinkSquareConfig = {
 function TornadoCard({ src, config, index }) {
   const ref = useRef(null)
   const angleRef = useRef(config.startAngle)
+  const selfSpin = useRef(0)
 
   useEffect(() => {
     let animFrame
     let lastTime = performance.now()
+    const selfSpinSpeed = 8 + index * 3
 
     const animate = (now) => {
       const delta = (now - lastTime) / 1000
       lastTime = now
       angleRef.current = (angleRef.current + (360 / config.speed) * delta) % 360
+      selfSpin.current = (selfSpin.current + selfSpinSpeed * delta) % 360
       const rad = (angleRef.current * Math.PI) / 180
       const x = Math.cos(rad) * config.radiusX
       const yOrbit = Math.sin(rad) * config.radiusY * 0.4
       const y = yOrbit + config.yOffset
-      const scale = 0.7 + 0.3 * ((Math.sin(rad) + 1) / 2)
-      const rotation = Math.sin(rad) * 12
+      const depth = (Math.sin(rad) + 1) / 2
+      const scale = 0.7 + 0.3 * depth
       const zIndex = Math.round(scale * 10)
 
+      const rotateY = Math.sin((selfSpin.current * Math.PI) / 180) * 25
+      const rotateX = Math.cos((selfSpin.current * Math.PI) / 180) * 10
+      const rotateZ = Math.sin(rad) * 8
+
       if (ref.current) {
-        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rotation}deg) scale(${scale})`
+        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
         ref.current.style.zIndex = zIndex
         ref.current.style.opacity = 0.6 + 0.4 * scale
         ref.current.style.filter = `brightness(${0.25 + 0.2 * scale})`
@@ -54,7 +61,7 @@ function TornadoCard({ src, config, index }) {
 
     animFrame = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(animFrame)
-  }, [config])
+  }, [config, index])
 
   return (
     <div
@@ -65,6 +72,7 @@ function TornadoCard({ src, config, index }) {
         top: '50%',
         width: config.width,
         height: config.height,
+        transformStyle: 'preserve-3d',
       }}
     >
       <img
@@ -75,7 +83,7 @@ function TornadoCard({ src, config, index }) {
           height: '100%',
           objectFit: 'cover',
           borderRadius: 4,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.7)',
         }}
       />
     </div>
@@ -102,8 +110,11 @@ function PinkSquare() {
       const rotation = angleRef.current * 0.3
       const zIndex = Math.round(scale * 10)
 
+      const rotateY = Math.sin(rad * 1.5) * 20
+      const rotateX = Math.cos(rad * 1.2) * 15
+
       if (ref.current) {
-        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rotation}deg) scale(${scale})`
+        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotation}deg) scale(${scale})`
         ref.current.style.zIndex = zIndex
       }
 
@@ -123,6 +134,7 @@ function PinkSquare() {
         top: '50%',
         width: pinkSquareConfig.size,
         height: pinkSquareConfig.size,
+        transformStyle: 'preserve-3d',
       }}
     >
       <div style={{
