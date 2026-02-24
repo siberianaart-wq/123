@@ -187,40 +187,81 @@ function PinkSquare({ yOffset }) {
 }
 
 function MobileCarousel({ onOpen }) {
-  const scrollRef = useRef(null)
+  const [active, setActive] = useState(0)
+  const touchStart = useRef(null)
+  const count = galleryImages.length
+
+  const prev = () => setActive((a) => (a - 1 + count) % count)
+  const next = () => setActive((a) => (a + 1) % count)
+
+  const handleTouchStart = (e) => {
+    touchStart.current = e.touches[0].clientX
+  }
+  const handleTouchEnd = (e) => {
+    if (touchStart.current === null) return
+    const diff = touchStart.current - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) next()
+      else prev()
+    }
+    touchStart.current = null
+  }
+
+  const getOffset = (index) => {
+    let diff = index - active
+    if (diff > count / 2) diff -= count
+    if (diff < -count / 2) diff += count
+    return diff
+  }
 
   return (
-    <div style={{
-      padding: '4rem 0 2rem',
-    }}>
-      <div
-        ref={scrollRef}
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          overflowX: 'auto',
-          overflowY: 'hidden',
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-          paddingLeft: '1.5rem',
-          paddingRight: '1.5rem',
-          paddingBottom: '1rem',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}
-      >
-        {galleryImages.map((src, i) => (
+    <div
+      style={{
+        padding: '3rem 0 2rem',
+        position: 'relative',
+        height: '70vw',
+        overflow: 'hidden',
+        perspective: '800px',
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {galleryImages.map((src, i) => {
+        const offset = getOffset(i)
+        const absOff = Math.abs(offset)
+        const visible = absOff <= 2
+
+        if (!visible) return null
+
+        const translateX = offset * 55
+        const translateZ = -absOff * 120
+        const rotateY = offset * -25
+        const scale = 1 - absOff * 0.2
+        const opacity = 1 - absOff * 0.3
+        const zIndex = 10 - absOff
+
+        return (
           <div
             key={i}
-            onClick={() => onOpen(i)}
+            onClick={() => {
+              if (offset === 0) onOpen(i)
+              else if (offset > 0) next()
+              else prev()
+            }}
             style={{
-              flexShrink: 0,
-              width: '75vw',
-              height: '75vw',
-              scrollSnapAlign: 'center',
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              width: '60vw',
+              height: '60vw',
+              transform: `translate(-50%, -50%) translateX(${translateX}%) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+              transition: 'all 0.45s cubic-bezier(0.25, 0.1, 0.25, 1)',
+              zIndex,
+              opacity,
               cursor: 'pointer',
               borderRadius: 4,
               overflow: 'hidden',
+              transformStyle: 'preserve-3d',
             }}
           >
             <img
@@ -231,15 +272,16 @@ function MobileCarousel({ onOpen }) {
                 height: '100%',
                 objectFit: 'cover',
                 borderRadius: 4,
-                boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+                boxShadow: offset === 0
+                  ? '0 12px 40px rgba(0,0,0,0.7)'
+                  : '0 6px 20px rgba(0,0,0,0.4)',
+                filter: offset === 0 ? 'brightness(1)' : 'brightness(0.5)',
+                transition: 'filter 0.45s ease, box-shadow 0.45s ease',
               }}
             />
           </div>
-        ))}
-      </div>
-      <style jsx>{`
-        div::-webkit-scrollbar { display: none; }
-      `}</style>
+        )
+      })}
     </div>
   )
 }
