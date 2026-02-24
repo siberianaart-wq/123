@@ -6,11 +6,10 @@ import galleryImages from '../../gallery.config'
 
 export default function GalleryGrid() {
   const [openIndex, setOpenIndex] = useState(null)
-  const [closingIndex, setClosingIndex] = useState(null)
+  const [animPhase, setAnimPhase] = useState('idle')
   const [columns, setColumns] = useState(3)
   const [isMobile, setIsMobile] = useState(false)
-  const [imgRect, setImgRect] = useState(null)
-  const [viewSize, setViewSize] = useState({ vw: 400, vh: 800 })
+  const [startRect, setStartRect] = useState(null)
   const imgRefs = useRef({})
 
   useEffect(() => {
@@ -19,7 +18,6 @@ export default function GalleryGrid() {
       setIsMobile(w < 768)
       if (w < 768) setColumns(2)
       else setColumns(3)
-      setViewSize({ vw: window.innerWidth, vh: window.innerHeight })
     }
     update()
     window.addEventListener('resize', update)
@@ -36,15 +34,19 @@ export default function GalleryGrid() {
     const el = imgRefs.current[i]
     if (!el) return
     const rect = el.getBoundingClientRect()
-    setImgRect({
+    setStartRect({
       top: rect.top,
       left: rect.left,
       width: rect.width,
       height: rect.height,
     })
-    setViewSize({ vw: window.innerWidth, vh: window.innerHeight })
-    setClosingIndex(null)
     setOpenIndex(i)
+    setAnimPhase('from')
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setAnimPhase('to')
+      })
+    })
   }, [])
 
   const handleClose = useCallback(() => {
@@ -52,21 +54,47 @@ export default function GalleryGrid() {
     const el = imgRefs.current[openIndex]
     if (el) {
       const rect = el.getBoundingClientRect()
-      setImgRect({
+      setStartRect({
         top: rect.top,
         left: rect.left,
         width: rect.width,
         height: rect.height,
       })
     }
-    setClosingIndex(openIndex)
-    setOpenIndex(null)
+    setAnimPhase('from')
+    setTimeout(() => {
+      setOpenIndex(null)
+      setAnimPhase('idle')
+    }, 450)
   }, [openIndex])
 
   const canExpand = !isMobile && columns < 6
   const canShrink = !isMobile && columns > 3
+  const isActive = openIndex !== null
 
-  const isHidden = (i) => openIndex === i || closingIndex === i
+  const getExpandedStyle = () => {
+    if (!startRect) return {}
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    if (animPhase === 'to') {
+      return {
+        top: vh * 0.075,
+        left: vw * 0.075,
+        width: vw * 0.85,
+        height: vh * 0.85,
+        borderRadius: 8,
+        opacity: 1,
+      }
+    }
+    return {
+      top: startRect.top,
+      left: startRect.left,
+      width: startRect.width,
+      height: startRect.height,
+      borderRadius: 2,
+      opacity: 1,
+    }
+  }
 
   return (
     <div style={{
@@ -180,7 +208,7 @@ export default function GalleryGrid() {
                 display: 'block',
                 transition: 'transform 0.4s ease, filter 0.4s ease',
                 filter: 'brightness(0.7)',
-                opacity: isHidden(i) ? 0 : 1,
+                visibility: (openIndex === i && animPhase !== 'idle') ? 'hidden' : 'visible',
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.transform = 'scale(1.05)'
@@ -195,97 +223,66 @@ export default function GalleryGrid() {
         ))}
       </div>
 
-      <AnimatePresence
-        onExitComplete={() => setClosingIndex(null)}
-      >
-        {openIndex !== null && imgRect && (
-          <>
-            <motion.div
-              key="overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={handleClose}
+      {isActive && startRect && (
+        <>
+          <div
+            onClick={handleClose}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.92)',
+              zIndex: 999,
+              opacity: animPhase === 'to' ? 1 : 0,
+              transition: 'opacity 0.35s ease',
+            }}
+          />
+          <div
+            onClick={handleClose}
+            style={{
+              position: 'fixed',
+              ...getExpandedStyle(),
+              zIndex: 1000,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              transition: 'top 0.45s cubic-bezier(0.25,0.1,0.25,1), left 0.45s cubic-bezier(0.25,0.1,0.25,1), width 0.45s cubic-bezier(0.25,0.1,0.25,1), height 0.45s cubic-bezier(0.25,0.1,0.25,1), border-radius 0.45s cubic-bezier(0.25,0.1,0.25,1)',
+            }}
+          >
+            <img
+              src={galleryImages[openIndex]}
+              alt="Expanded work"
+              onClick={(e) => e.stopPropagation()}
               style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(0,0,0,0.92)',
-                zIndex: 999,
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                cursor: 'default',
               }}
             />
-            <motion.div
-              key={`expanding-${openIndex}`}
-              initial={{
-                top: imgRect.top,
-                left: imgRect.left,
-                width: imgRect.width,
-                height: imgRect.height,
-                borderRadius: 2,
-              }}
-              animate={{
-                top: viewSize.vh * 0.075,
-                left: viewSize.vw * 0.075,
-                width: viewSize.vw * 0.85,
-                height: viewSize.vh * 0.85,
-                borderRadius: 8,
-              }}
-              exit={{
-                top: imgRect.top,
-                left: imgRect.left,
-                width: imgRect.width,
-                height: imgRect.height,
-                borderRadius: 2,
-              }}
-              transition={{ duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
-              onClick={handleClose}
-              style={{
-                position: 'fixed',
-                zIndex: 1000,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}
-            >
-              <img
-                src={galleryImages[openIndex]}
-                alt="Expanded work"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                  cursor: 'default',
-                }}
-              />
-            </motion.div>
-            <motion.div
-              key="close-btn"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              style={{
-                position: 'fixed',
-                top: '2rem',
-                right: '2rem',
-                color: 'rgba(255,255,255,0.6)',
-                fontSize: '1.5rem',
-                fontWeight: 200,
-                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                cursor: 'pointer',
-                zIndex: 1001,
-                lineHeight: 1,
-              }}
-              onClick={handleClose}
-            >
-              ✕
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          </div>
+          <div
+            style={{
+              position: 'fixed',
+              top: '2rem',
+              right: '2rem',
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '1.5rem',
+              fontWeight: 200,
+              fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+              cursor: 'pointer',
+              zIndex: 1001,
+              lineHeight: 1,
+              opacity: animPhase === 'to' ? 1 : 0,
+              transition: 'opacity 0.3s ease 0.15s',
+            }}
+            onClick={handleClose}
+          >
+            ✕
+          </div>
+        </>
+      )}
     </div>
   )
 }
