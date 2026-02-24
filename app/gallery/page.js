@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import galleryImages from '../../gallery.config'
@@ -8,6 +8,8 @@ export default function GalleryGrid() {
   const [openIndex, setOpenIndex] = useState(null)
   const [columns, setColumns] = useState(3)
   const [isMobile, setIsMobile] = useState(false)
+  const [imgRect, setImgRect] = useState(null)
+  const imgRefs = useRef([])
 
   useEffect(() => {
     const update = () => {
@@ -27,8 +29,25 @@ export default function GalleryGrid() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
+  const handleOpen = (i) => {
+    const el = imgRefs.current[i]
+    if (el) {
+      const rect = el.getBoundingClientRect()
+      setImgRect({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      })
+    }
+    setOpenIndex(i)
+  }
+
   const canExpand = !isMobile && columns < 6
   const canShrink = !isMobile && columns > 3
+
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 400
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800
 
   return (
     <div style={{
@@ -110,8 +129,7 @@ export default function GalleryGrid() {
         )}
       </div>
 
-      <motion.div
-        layout
+      <div
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${columns}, 1fr)`,
@@ -121,11 +139,11 @@ export default function GalleryGrid() {
         {galleryImages.map((src, i) => (
           <motion.div
             key={i}
-            layout
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.05 }}
-            onClick={() => setOpenIndex(i)}
+            ref={(el) => imgRefs.current[i] = el}
+            onClick={() => handleOpen(i)}
             style={{
               aspectRatio: '1',
               cursor: 'pointer',
@@ -133,8 +151,7 @@ export default function GalleryGrid() {
               borderRadius: 2,
             }}
           >
-            <motion.img
-              layoutId={`gallery-img-${i}`}
+            <img
               src={src}
               alt={`Work ${i + 1}`}
               style={{
@@ -156,50 +173,82 @@ export default function GalleryGrid() {
             />
           </motion.div>
         ))}
-      </motion.div>
+      </div>
 
       <AnimatePresence>
-        {openIndex !== null && (
-          <motion.div
-            key="lightbox-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            onClick={() => setOpenIndex(null)}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(0,0,0,0.92)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
-              cursor: 'pointer',
-            }}
-          >
-            <motion.img
-              layoutId={`gallery-img-${openIndex}`}
-              src={galleryImages[openIndex]}
-              alt="Expanded work"
-              onClick={(e) => e.stopPropagation()}
-              transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+        {openIndex !== null && imgRect && (
+          <>
+            <motion.div
+              key="overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={() => setOpenIndex(null)}
               style={{
-                maxWidth: '85vw',
-                maxHeight: '85vh',
-                objectFit: 'contain',
-                borderRadius: 8,
-                boxShadow: '0 20px 80px rgba(0,0,0,0.8)',
-                cursor: 'default',
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.92)',
+                zIndex: 999,
               }}
             />
             <motion.div
+              key="expanding-img"
+              initial={{
+                position: 'fixed',
+                top: imgRect.top,
+                left: imgRect.left,
+                width: imgRect.width,
+                height: imgRect.height,
+                zIndex: 1000,
+                borderRadius: 2,
+              }}
+              animate={{
+                top: vh * 0.075,
+                left: vw * 0.075,
+                width: vw * 0.85,
+                height: vh * 0.85,
+                borderRadius: 8,
+              }}
+              exit={{
+                top: imgRect.top,
+                left: imgRect.left,
+                width: imgRect.width,
+                height: imgRect.height,
+                borderRadius: 2,
+              }}
+              transition={{ duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
+              onClick={() => setOpenIndex(null)}
+              style={{
+                position: 'fixed',
+                zIndex: 1000,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}
+            >
+              <img
+                src={galleryImages[openIndex]}
+                alt="Expanded work"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  cursor: 'default',
+                }}
+              />
+            </motion.div>
+            <motion.div
+              key="close-btn"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
               style={{
-                position: 'absolute',
+                position: 'fixed',
                 top: '2rem',
                 right: '2rem',
                 color: 'rgba(255,255,255,0.6)',
@@ -214,7 +263,7 @@ export default function GalleryGrid() {
             >
               ✕
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
