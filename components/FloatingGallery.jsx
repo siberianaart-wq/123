@@ -21,9 +21,9 @@ function OrbitGallery({ onOpen }) {
   const count = galleryImages.length
 
   const tiers = useMemo(() => {
-    const perTier = 2
+    const perTier = 3
     const tierCount = Math.ceil(count / perTier)
-    const tierSpacing = 260
+    const tierSpacing = 240
     const totalHeight = tierCount * tierSpacing
     const startY = -totalHeight / 2
     const result = []
@@ -33,12 +33,12 @@ function OrbitGallery({ onOpen }) {
         items: galleryImages.slice(t * perTier, t * perTier + itemsInTier),
         startIdx: t * perTier,
         count: itemsInTier,
-        radiusX: 360 + t * 40,
-        radiusY: 20 + t * 5,
+        radiusX: 380 + t * 35,
+        radiusY: 18 + t * 4,
         yCenter: startY + t * tierSpacing,
-        speed: 8 + t * 2,
+        speed: 6 + t * 1.5,
         direction: t % 2 === 0 ? 1 : -1,
-        cardSize: 190 - t * 5,
+        cardSize: 200 - t * 8,
       })
     }
     return result
@@ -70,11 +70,12 @@ function OrbitGallery({ onOpen }) {
           const depth = (Math.sin(rad) + 1) / 2
           const scale = 0.4 + 0.9 * depth
           const zIndex = Math.round(depth * 100)
-          const brightness = 0.15 + 0.85 * depth
+          const opacity = 0.3 + 0.7 * depth
 
           el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`
           el.style.zIndex = zIndex
-          el.style.filter = `brightness(${brightness})`
+          el.style.opacity = opacity
+          el.style.filter = 'none'
         }
       }
 
@@ -315,7 +316,7 @@ export default function FloatingGallery() {
 
   return (
     <section style={isMobile ? {} : {
-      height: '250vh',
+      height: '180vh',
       position: 'relative',
       overflow: 'visible',
     }}>
