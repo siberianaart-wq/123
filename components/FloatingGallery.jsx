@@ -22,136 +22,38 @@ const pinkSquareConfig = {
   radiusX: 280, radiusY: 140, speed: 40, startAngle: 36, size: 180, yOffset: 250,
 }
 
-const TOTAL = images.length + 1
-
-function getRect(x, y, w, h) {
-  return { left: x - w / 2, right: x + w / 2, top: y - h / 2, bottom: y + h / 2 }
-}
-
-function rectsOverlap(a, b) {
-  return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)
-}
-
-function overlapAmount(a, b) {
-  const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left)
-  const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
-  return ox > 0 && oy > 0 ? Math.sqrt(ox * ox + oy * oy) : 0
-}
-
-export default function FloatingGallery() {
-  const [mounted, setMounted] = useState(false)
-  const containerRef = useRef(null)
-  const refsArr = useRef([])
-  const stateRef = useRef(null)
-
-  useEffect(() => setMounted(true), [])
+function TornadoCard({ src, config, index }) {
+  const ref = useRef(null)
+  const angleRef = useRef(config.startAngle)
+  const selfSpin = useRef(0)
 
   useEffect(() => {
-    if (!mounted) return
-
-    const angles = []
-    const directions = []
-    const selfSpins = []
-    const velocities = []
-    const bounceTimers = []
-    const sizes = []
-
-    for (let i = 0; i < images.length; i++) {
-      angles.push(cardConfigs[i].startAngle)
-      directions.push(1)
-      selfSpins.push(0)
-      velocities.push(360 / cardConfigs[i].speed)
-      bounceTimers.push(0)
-      sizes.push({ w: cardConfigs[i].width * 0.6, h: cardConfigs[i].height * 0.6 })
-    }
-    angles.push(pinkSquareConfig.startAngle)
-    directions.push(1)
-    selfSpins.push(0)
-    velocities.push(360 / pinkSquareConfig.speed)
-    bounceTimers.push(0)
-    sizes.push({ w: pinkSquareConfig.size * 0.6, h: pinkSquareConfig.size * 0.6 })
-
-    stateRef.current = { angles, directions, selfSpins, velocities, bounceTimers, sizes }
-
     let animFrame
     let lastTime = performance.now()
+    const selfSpinSpeed = 8 + index * 3
 
     const animate = (now) => {
-      const delta = Math.min((now - lastTime) / 1000, 0.05)
+      const delta = (now - lastTime) / 1000
       lastTime = now
-      const st = stateRef.current
+      angleRef.current = (angleRef.current + (360 / config.speed) * delta) % 360
+      selfSpin.current = (selfSpin.current + selfSpinSpeed * delta) % 360
+      const rad = (angleRef.current * Math.PI) / 180
+      const x = Math.cos(rad) * config.radiusX
+      const yOrbit = Math.sin(rad) * config.radiusY * 0.4
+      const y = yOrbit + config.yOffset
+      const depth = (Math.sin(rad) + 1) / 2
+      const scale = 0.7 + 0.3 * depth
+      const zIndex = Math.round(scale * 10)
 
-      for (let i = 0; i < st.bounceTimers.length; i++) {
-        if (st.bounceTimers[i] > 0) st.bounceTimers[i] -= delta
-      }
+      const rotateY = Math.sin((selfSpin.current * Math.PI) / 180) * 25
+      const rotateX = Math.cos((selfSpin.current * Math.PI) / 180) * 10
+      const rotateZ = Math.sin(rad) * 8
 
-      const positions = []
-      for (let i = 0; i < TOTAL; i++) {
-        st.angles[i] = (st.angles[i] + st.velocities[i] * st.directions[i] * delta) % 360
-        if (st.angles[i] < 0) st.angles[i] += 360
-        st.selfSpins[i] += (10 + i * 2) * delta
-
-        const isSquare = i === images.length
-        const cfg = isSquare ? pinkSquareConfig : cardConfigs[i]
-        const rad = (st.angles[i] * Math.PI) / 180
-        const x = Math.cos(rad) * cfg.radiusX
-        const yOrbit = Math.sin(rad) * cfg.radiusY * 0.4
-        const y = yOrbit + cfg.yOffset
-        positions.push({ x, y, idx: i })
-      }
-
-      for (let i = 0; i < TOTAL; i++) {
-        for (let j = i + 1; j < TOTAL; j++) {
-          const a = positions[i]
-          const b = positions[j]
-          const ra = getRect(a.x, a.y, st.sizes[i].w, st.sizes[i].h)
-          const rb = getRect(b.x, b.y, st.sizes[j].w, st.sizes[j].h)
-          if (rectsOverlap(ra, rb) && st.bounceTimers[i] <= 0 && st.bounceTimers[j] <= 0) {
-            const overlap = overlapAmount(ra, rb)
-            if (overlap > 20) {
-              st.directions[i] *= -1
-              st.directions[j] *= -1
-              st.bounceTimers[i] = 1.5
-              st.bounceTimers[j] = 1.5
-              st.velocities[i] = Math.min(st.velocities[i] * 1.15, 20)
-              st.velocities[j] = Math.min(st.velocities[j] * 1.15, 20)
-              setTimeout(() => {
-                if (stateRef.current) {
-                  const isSquareI = i === images.length
-                  const isSquareJ = j === images.length
-                  stateRef.current.velocities[i] = 360 / (isSquareI ? pinkSquareConfig.speed : cardConfigs[i].speed)
-                  stateRef.current.velocities[j] = 360 / (isSquareJ ? pinkSquareConfig.speed : cardConfigs[j].speed)
-                }
-              }, 2000)
-            }
-          }
-        }
-      }
-
-      for (let i = 0; i < TOTAL; i++) {
-        const el = refsArr.current[i]
-        if (!el) continue
-
-        const isSquare = i === images.length
-        const cfg = isSquare ? pinkSquareConfig : cardConfigs[i]
-        const rad = (st.angles[i] * Math.PI) / 180
-        const depth = (Math.sin(rad) + 1) / 2
-        const scale = 0.7 + 0.3 * depth
-        const zIndex = Math.round(scale * 10)
-        const selfRad = (st.selfSpins[i] * Math.PI) / 180
-
-        const rotateY = Math.sin(selfRad) * 25
-        const rotateX = Math.cos(selfRad * 0.7) * 12
-        const rotateZ = Math.sin(rad) * 8
-
-        const p = positions[i]
-        el.style.transform = `translate(calc(-50% + ${p.x}px), calc(-50% + ${p.y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
-        el.style.zIndex = zIndex
-
-        if (!isSquare) {
-          el.style.opacity = 0.6 + 0.4 * scale
-          el.style.filter = `brightness(${0.25 + 0.2 * scale})`
-        }
+      if (ref.current) {
+        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
+        ref.current.style.zIndex = zIndex
+        ref.current.style.opacity = 0.6 + 0.4 * scale
+        ref.current.style.filter = `brightness(${0.25 + 0.2 * scale})`
       }
 
       animFrame = requestAnimationFrame(animate)
@@ -159,7 +61,144 @@ export default function FloatingGallery() {
 
     animFrame = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(animFrame)
-  }, [mounted])
+  }, [config, index])
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        width: config.width,
+        height: config.height,
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      <img
+        src={src}
+        alt={`Work ${index + 1}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          borderRadius: 4,
+          boxShadow: '0 12px 40px rgba(0,0,0,0.7)',
+        }}
+      />
+    </div>
+  )
+}
+
+function PinkSquare() {
+  const ref = useRef(null)
+  const angleRef = useRef(pinkSquareConfig.startAngle)
+
+  useEffect(() => {
+    let animFrame
+    let lastTime = performance.now()
+
+    const animate = (now) => {
+      const delta = (now - lastTime) / 1000
+      lastTime = now
+      angleRef.current = (angleRef.current + (360 / pinkSquareConfig.speed) * delta) % 360
+      const rad = (angleRef.current * Math.PI) / 180
+      const x = Math.cos(rad) * pinkSquareConfig.radiusX
+      const yOrbit = Math.sin(rad) * pinkSquareConfig.radiusY * 0.4
+      const y = yOrbit + pinkSquareConfig.yOffset
+      const scale = 0.8 + 0.2 * ((Math.sin(rad) + 1) / 2)
+      const rotation = angleRef.current * 0.3
+      const zIndex = Math.round(scale * 10)
+
+      const rotateY = Math.sin(rad * 1.5) * 20
+      const rotateX = Math.cos(rad * 1.2) * 15
+
+      if (ref.current) {
+        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotation}deg) scale(${scale})`
+        ref.current.style.zIndex = zIndex
+      }
+
+      animFrame = requestAnimationFrame(animate)
+    }
+
+    animFrame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animFrame)
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        width: pinkSquareConfig.size,
+        height: pinkSquareConfig.size,
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      <div style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        transformStyle: 'preserve-3d',
+      }}>
+        <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          background: '#e84393',
+          boxShadow: '0 0 60px rgba(232,67,147,0.4), 0 0 120px rgba(232,67,147,0.15)',
+        }} />
+        <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          background: '#c7316e',
+          transform: 'translateZ(-30px)',
+        }} />
+        <div style={{
+          position: 'absolute',
+          width: 30,
+          height: '100%',
+          background: '#b52a60',
+          transform: 'rotateY(90deg) translateZ(0px)',
+          transformOrigin: 'left center',
+        }} />
+        <div style={{
+          position: 'absolute',
+          width: 30,
+          height: '100%',
+          background: '#d43d7a',
+          right: 0,
+          transform: 'rotateY(-90deg) translateZ(0px)',
+          transformOrigin: 'right center',
+        }} />
+        <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: 30,
+          background: '#d43d7a',
+          transform: 'rotateX(90deg) translateZ(0px)',
+          transformOrigin: 'center top',
+        }} />
+        <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: 30,
+          background: '#b52a60',
+          bottom: 0,
+          transform: 'rotateX(-90deg) translateZ(0px)',
+          transformOrigin: 'center bottom',
+        }} />
+      </div>
+    </div>
+  )
+}
+
+export default function FloatingGallery() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   return (
     <section style={{
@@ -196,100 +235,15 @@ export default function FloatingGallery() {
           width: 0,
           height: 0,
         }}>
+          <PinkSquare />
           {images.map((src, i) => (
-            <div
+            <TornadoCard
               key={i}
-              ref={el => refsArr.current[i] = el}
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                width: cardConfigs[i].width,
-                height: cardConfigs[i].height,
-                transformStyle: 'preserve-3d',
-              }}
-            >
-              <img
-                src={src}
-                alt={`Work ${i + 1}`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  borderRadius: 4,
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.7)',
-                }}
-              />
-            </div>
+              src={src}
+              config={cardConfigs[i]}
+              index={i}
+            />
           ))}
-
-          <div
-            ref={el => refsArr.current[images.length] = el}
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              width: pinkSquareConfig.size,
-              height: pinkSquareConfig.size,
-              transformStyle: 'preserve-3d',
-            }}
-          >
-            <div style={{
-              width: '100%',
-              height: '100%',
-              position: 'relative',
-              transformStyle: 'preserve-3d',
-            }}>
-              <div style={{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                background: '#e84393',
-                boxShadow: '0 0 60px rgba(232,67,147,0.4), 0 0 120px rgba(232,67,147,0.15)',
-              }} />
-              <div style={{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                background: '#c7316e',
-                transform: 'translateZ(-30px)',
-              }} />
-              <div style={{
-                position: 'absolute',
-                width: 30,
-                height: '100%',
-                background: '#b52a60',
-                transform: 'rotateY(90deg) translateZ(0px)',
-                transformOrigin: 'left center',
-              }} />
-              <div style={{
-                position: 'absolute',
-                width: 30,
-                height: '100%',
-                background: '#d43d7a',
-                right: 0,
-                transform: 'rotateY(-90deg) translateZ(0px)',
-                transformOrigin: 'right center',
-              }} />
-              <div style={{
-                position: 'absolute',
-                width: '100%',
-                height: 30,
-                background: '#d43d7a',
-                transform: 'rotateX(90deg) translateZ(0px)',
-                transformOrigin: 'center top',
-              }} />
-              <div style={{
-                position: 'absolute',
-                width: '100%',
-                height: 30,
-                background: '#b52a60',
-                bottom: 0,
-                transform: 'rotateX(-90deg) translateZ(0px)',
-                transformOrigin: 'center bottom',
-              }} />
-            </div>
-          </div>
         </div>
       )}
     </section>
