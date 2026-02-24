@@ -11,15 +11,15 @@ const images = [
 ]
 
 const cardConfigs = [
-  { radiusX: 340, radiusY: 150, speed: 45, startAngle: 0, width: 420, height: 320, yOffset: -80 },
-  { radiusX: 380, radiusY: 170, speed: 55, startAngle: 72, width: 340, height: 380, yOffset: 40 },
-  { radiusX: 300, radiusY: 190, speed: 65, startAngle: 144, width: 480, height: 280, yOffset: 160 },
-  { radiusX: 360, radiusY: 160, speed: 50, startAngle: 216, width: 300, height: 420, yOffset: -130 },
-  { radiusX: 320, radiusY: 180, speed: 60, startAngle: 288, width: 400, height: 340, yOffset: 220 },
+  { radiusX: 380, radiusY: 170, speed: 45, startAngle: 0, width: 680, height: 500, yOffset: -100 },
+  { radiusX: 420, radiusY: 190, speed: 55, startAngle: 72, width: 360, height: 400, yOffset: 120 },
+  { radiusX: 340, radiusY: 210, speed: 65, startAngle: 144, width: 440, height: 300, yOffset: 340 },
+  { radiusX: 400, radiusY: 180, speed: 50, startAngle: 216, width: 320, height: 440, yOffset: 550 },
+  { radiusX: 360, radiusY: 200, speed: 60, startAngle: 288, width: 400, height: 360, yOffset: 760 },
 ]
 
 const pinkSquareConfig = {
-  radiusX: 240, radiusY: 120, speed: 40, startAngle: 36, size: 160, yOffset: 60,
+  radiusX: 280, radiusY: 140, speed: 40, startAngle: 36, size: 180, yOffset: 250,
 }
 
 function TornadoCard({ src, config, index }) {
@@ -154,7 +154,7 @@ export default function FloatingGallery() {
 
   return (
     <section style={{
-      height: '100vh',
+      height: '200vh',
       position: 'relative',
       overflow: 'hidden',
     }}>
