@@ -11,12 +11,16 @@ const images = [
 ]
 
 const cardConfigs = [
-  { radiusX: 280, radiusY: 120, speed: 45, startAngle: 0, width: 260, height: 200 },
-  { radiusX: 320, radiusY: 140, speed: 55, startAngle: 72, width: 240, height: 220 },
-  { radiusX: 250, radiusY: 160, speed: 65, startAngle: 144, width: 280, height: 180 },
-  { radiusX: 300, radiusY: 130, speed: 50, startAngle: 216, width: 220, height: 240 },
-  { radiusX: 260, radiusY: 150, speed: 60, startAngle: 288, width: 250, height: 210 },
+  { radiusX: 300, radiusY: 130, speed: 45, startAngle: 0, width: 260, height: 200, yOffset: -60 },
+  { radiusX: 340, radiusY: 150, speed: 55, startAngle: 72, width: 240, height: 220, yOffset: 30 },
+  { radiusX: 260, radiusY: 170, speed: 65, startAngle: 144, width: 280, height: 180, yOffset: 120 },
+  { radiusX: 320, radiusY: 140, speed: 50, startAngle: 216, width: 220, height: 240, yOffset: -100 },
+  { radiusX: 280, radiusY: 160, speed: 60, startAngle: 288, width: 250, height: 210, yOffset: 180 },
 ]
+
+const pinkSquareConfig = {
+  radiusX: 200, radiusY: 100, speed: 40, startAngle: 36, size: 120, yOffset: 50,
+}
 
 function TornadoCard({ src, config, index }) {
   const ref = useRef(null)
@@ -32,16 +36,17 @@ function TornadoCard({ src, config, index }) {
       angleRef.current = (angleRef.current + (360 / config.speed) * delta) % 360
       const rad = (angleRef.current * Math.PI) / 180
       const x = Math.cos(rad) * config.radiusX
-      const y = Math.sin(rad) * config.radiusY * 0.5
+      const yOrbit = Math.sin(rad) * config.radiusY * 0.4
+      const y = yOrbit + config.yOffset
       const scale = 0.7 + 0.3 * ((Math.sin(rad) + 1) / 2)
-      const rotation = Math.sin(rad) * 15
+      const rotation = Math.sin(rad) * 12
       const zIndex = Math.round(scale * 10)
 
       if (ref.current) {
         ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rotation}deg) scale(${scale})`
         ref.current.style.zIndex = zIndex
-        ref.current.style.opacity = 0.7 + 0.3 * scale
-        ref.current.style.filter = `brightness(${0.3 + 0.2 * scale})`
+        ref.current.style.opacity = 0.6 + 0.4 * scale
+        ref.current.style.filter = `brightness(${0.25 + 0.2 * scale})`
       }
 
       animFrame = requestAnimationFrame(animate)
@@ -60,7 +65,6 @@ function TornadoCard({ src, config, index }) {
         top: '50%',
         width: config.width,
         height: config.height,
-        transition: 'none',
       }}
     >
       <img
@@ -74,6 +78,60 @@ function TornadoCard({ src, config, index }) {
           boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
         }}
       />
+    </div>
+  )
+}
+
+function PinkSquare() {
+  const ref = useRef(null)
+  const angleRef = useRef(pinkSquareConfig.startAngle)
+
+  useEffect(() => {
+    let animFrame
+    let lastTime = performance.now()
+
+    const animate = (now) => {
+      const delta = (now - lastTime) / 1000
+      lastTime = now
+      angleRef.current = (angleRef.current + (360 / pinkSquareConfig.speed) * delta) % 360
+      const rad = (angleRef.current * Math.PI) / 180
+      const x = Math.cos(rad) * pinkSquareConfig.radiusX
+      const yOrbit = Math.sin(rad) * pinkSquareConfig.radiusY * 0.4
+      const y = yOrbit + pinkSquareConfig.yOffset
+      const scale = 0.8 + 0.2 * ((Math.sin(rad) + 1) / 2)
+      const rotation = angleRef.current * 0.3
+      const zIndex = Math.round(scale * 10)
+
+      if (ref.current) {
+        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rotation}deg) scale(${scale})`
+        ref.current.style.zIndex = zIndex
+      }
+
+      animFrame = requestAnimationFrame(animate)
+    }
+
+    animFrame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animFrame)
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        width: pinkSquareConfig.size,
+        height: pinkSquareConfig.size,
+      }}
+    >
+      <div style={{
+        width: '100%',
+        height: '100%',
+        background: '#e84393',
+        borderRadius: 0,
+        boxShadow: '0 0 60px rgba(232,67,147,0.4), 0 0 120px rgba(232,67,147,0.15)',
+      }} />
     </div>
   )
 }
@@ -109,27 +167,15 @@ export default function FloatingGallery() {
         WORKS
       </motion.p>
 
-      <div style={{
-        position: 'absolute',
-        left: '55%',
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 180,
-        height: 180,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, #e84393 0%, #c44dbb 40%, rgba(232,67,147,0.0) 70%)',
-        filter: 'blur(2px)',
-        zIndex: 10,
-      }} />
-
       {mounted && (
         <div style={{
           position: 'absolute',
-          left: '55%',
-          top: '50%',
+          left: '50%',
+          top: '45%',
           width: 0,
           height: 0,
         }}>
+          <PinkSquare />
           {images.map((src, i) => (
             <TornadoCard
               key={i}
