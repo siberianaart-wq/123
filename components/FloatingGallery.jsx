@@ -108,6 +108,8 @@ function TornadoCard({ src, config, index, onOpen, layer }) {
         transformStyle: 'preserve-3d',
         cursor: 'pointer',
         zIndex: layer,
+        borderRadius: 16,
+        overflow: 'hidden',
       }}
     >
       <img
@@ -117,10 +119,15 @@ function TornadoCard({ src, config, index, onOpen, layer }) {
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          borderRadius: 4,
-          boxShadow: '0 12px 40px rgba(0,0,0,0.7)',
         }}
       />
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        borderRadius: 16,
+        boxShadow: 'inset 0 0 40px 15px rgba(0,0,0,0.6)',
+        pointerEvents: 'none',
+      }} />
     </div>
   )
 }
@@ -259,7 +266,7 @@ function MobileCarousel({ onOpen }) {
               zIndex,
               opacity,
               cursor: 'pointer',
-              borderRadius: 4,
+              borderRadius: 16,
               overflow: 'hidden',
               transformStyle: 'preserve-3d',
             }}
@@ -271,14 +278,17 @@ function MobileCarousel({ onOpen }) {
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                borderRadius: 4,
-                boxShadow: offset === 0
-                  ? '0 12px 40px rgba(0,0,0,0.7)'
-                  : '0 6px 20px rgba(0,0,0,0.4)',
                 filter: offset === 0 ? 'brightness(1)' : 'brightness(0.5)',
-                transition: 'filter 0.45s ease, box-shadow 0.45s ease',
+                transition: 'filter 0.45s ease',
               }}
             />
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: 16,
+              boxShadow: 'inset 0 0 40px 15px rgba(0,0,0,0.6)',
+              pointerEvents: 'none',
+            }} />
           </div>
         )
       })}
