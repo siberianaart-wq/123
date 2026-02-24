@@ -36,9 +36,17 @@ export default function Entrance(){
       flexDirection:'column',
       alignItems:'center',
       justifyContent:'center',
-      gap: '1.5rem'
+      gap: 'clamp(0.8rem, 2vw, 1.5rem)',
+      padding: '0 1rem',
+      boxSizing: 'border-box',
     }}>
-      <div style={{display:'flex', alignItems:'baseline'}}>
+      <div style={{
+        display:'flex',
+        alignItems:'baseline',
+        flexWrap: 'nowrap',
+        justifyContent: 'center',
+        maxWidth: '100%',
+      }}>
         {title.split('').map((char, i) => (
           <motion.span
             key={i}
@@ -47,9 +55,9 @@ export default function Entrance(){
             initial="hidden"
             animate="visible"
             style={{
-              fontSize: 'clamp(4rem, 10vw, 9rem)',
+              fontSize: 'clamp(2rem, 10vw, 9rem)',
               fontWeight: 200,
-              letterSpacing: '0.08em',
+              letterSpacing: 'clamp(0.01em, 0.08em, 0.08em)',
               fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
               color: char === '.' ? '#e84393' : '#ffffff',
               display: 'inline-block'
@@ -64,12 +72,13 @@ export default function Entrance(){
         initial="hidden"
         animate="visible"
         style={{
-          fontSize: 'clamp(0.8rem, 1.5vw, 1.1rem)',
-          letterSpacing: '0.45em',
+          fontSize: 'clamp(0.55rem, 1.5vw, 1.1rem)',
+          letterSpacing: 'clamp(0.2em, 0.45em, 0.45em)',
           fontWeight: 300,
           color: 'rgba(255,255,255,0.5)',
           fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-          margin: 0
+          margin: 0,
+          textAlign: 'center',
         }}
       >
         {subtitle}
