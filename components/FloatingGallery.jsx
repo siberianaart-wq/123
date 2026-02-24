@@ -142,53 +142,53 @@ function PinkSquare() {
         height: '100%',
         position: 'relative',
         transformStyle: 'preserve-3d',
+        transform: 'translateZ(-45px)',
       }}>
         <div style={{
           position: 'absolute',
           width: '100%',
           height: '100%',
           background: '#e84393',
+          transform: 'translateZ(45px)',
           boxShadow: '0 0 60px rgba(232,67,147,0.4), 0 0 120px rgba(232,67,147,0.15)',
         }} />
         <div style={{
           position: 'absolute',
           width: '100%',
           height: '100%',
-          background: '#c7316e',
-          transform: 'translateZ(-30px)',
+          background: '#a82d6b',
+          transform: 'translateZ(-45px)',
         }} />
         <div style={{
           position: 'absolute',
-          width: 30,
+          width: '100%',
           height: '100%',
           background: '#b52a60',
-          transform: 'rotateY(90deg) translateZ(0px)',
+          transform: 'rotateY(-90deg) translateZ(45px)',
           transformOrigin: 'left center',
         }} />
         <div style={{
           position: 'absolute',
-          width: 30,
+          width: '100%',
           height: '100%',
           background: '#d43d7a',
-          right: 0,
-          transform: 'rotateY(-90deg) translateZ(0px)',
+          transform: 'rotateY(90deg) translateZ(45px)',
           transformOrigin: 'right center',
         }} />
         <div style={{
           position: 'absolute',
           width: '100%',
-          height: 30,
+          height: '100%',
           background: '#d43d7a',
-          transform: 'rotateX(90deg) translateZ(0px)',
+          transform: 'rotateX(90deg) translateZ(45px)',
           transformOrigin: 'center top',
         }} />
         <div style={{
           position: 'absolute',
           width: '100%',
-          height: 30,
+          height: '100%',
           background: '#b52a60',
-          bottom: 0,
-          transform: 'rotateX(-90deg) translateZ(0px)',
+          transform: 'rotateX(-90deg) translateZ(45px)',
           transformOrigin: 'center bottom',
         }} />
       </div>
