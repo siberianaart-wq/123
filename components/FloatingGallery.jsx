@@ -1,7 +1,21 @@
-
 'use client'
 import { Canvas } from '@react-three/fiber'
 import { Float, OrbitControls } from '@react-three/drei'
+import { Component } from 'react'
+
+class CanvasErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  render() {
+    if (this.state.hasError) return null
+    return this.props.children
+  }
+}
 
 function Work(){
   return (
@@ -17,11 +31,13 @@ function Work(){
 export default function FloatingGallery(){
   return (
     <section style={{height:'100vh'}}>
-      <Canvas camera={{position:[0,0,4]}}>
-        <ambientLight/>
-        <Work/>
-        <OrbitControls/>
-      </Canvas>
+      <CanvasErrorBoundary>
+        <Canvas camera={{position:[0,0,4]}}>
+          <ambientLight/>
+          <Work/>
+          <OrbitControls/>
+        </Canvas>
+      </CanvasErrorBoundary>
     </section>
   )
 }
