@@ -22,7 +22,7 @@ const pinkSquareConfig = {
   radiusX: 280, radiusY: 140, speed: 40, startAngle: 36, size: 180, yOffset: 250,
 }
 
-function TornadoCard({ src, config, index, onOpen }) {
+function TornadoCard({ src, config, index, onOpen, layer }) {
   const ref = useRef(null)
   const angleRef = useRef(config.startAngle)
   const selfSpin = useRef(0)
@@ -43,7 +43,6 @@ function TornadoCard({ src, config, index, onOpen }) {
       const y = yOrbit + config.yOffset
       const depth = (Math.sin(rad) + 1) / 2
       const scale = 0.7 + 0.3 * depth
-      const zIndex = Math.round(scale * 10)
 
       const rotateY = Math.sin((selfSpin.current * Math.PI) / 180) * 25
       const rotateX = Math.cos((selfSpin.current * Math.PI) / 180) * 10
@@ -51,7 +50,6 @@ function TornadoCard({ src, config, index, onOpen }) {
 
       if (ref.current) {
         ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
-        ref.current.style.zIndex = zIndex
         ref.current.style.opacity = 0.6 + 0.4 * scale
         ref.current.style.filter = `brightness(${0.25 + 0.2 * scale})`
       }
@@ -75,6 +73,7 @@ function TornadoCard({ src, config, index, onOpen }) {
         height: config.height,
         transformStyle: 'preserve-3d',
         cursor: 'pointer',
+        zIndex: layer,
       }}
     >
       <img
@@ -113,15 +112,12 @@ function PinkSquare() {
       const y = yOrbit + pinkSquareConfig.yOffset
       const depth = (Math.sin(rad) + 1) / 2
       const scale = 0.7 + 0.3 * depth
-      const zIndex = Math.round(scale * 10)
-
       const rotateY = Math.sin((selfSpin.current * Math.PI) / 180) * 25
       const rotateX = Math.cos((selfSpin.current * Math.PI) / 180) * 10
       const rotateZ = Math.sin(rad) * 8
 
       if (ref.current) {
         ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
-        ref.current.style.zIndex = zIndex
         ref.current.style.opacity = 0.6 + 0.4 * scale
         ref.current.style.filter = `brightness(${0.35 + 0.25 * scale})`
       }
@@ -143,6 +139,7 @@ function PinkSquare() {
         width: pinkSquareConfig.size,
         height: pinkSquareConfig.size,
         transformStyle: 'preserve-3d',
+        zIndex: 3,
       }}
     >
       <div style={{
@@ -269,6 +266,7 @@ export default function FloatingGallery() {
               config={cardConfigs[i]}
               index={i}
               onOpen={handleOpen}
+              layer={i + 1}
             />
           ))}
         </div>
