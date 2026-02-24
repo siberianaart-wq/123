@@ -11,15 +11,15 @@ const images = [
 ]
 
 const cardConfigs = [
-  { radiusX: 300, radiusY: 130, speed: 45, startAngle: 0, width: 260, height: 200, yOffset: -60 },
-  { radiusX: 340, radiusY: 150, speed: 55, startAngle: 72, width: 240, height: 220, yOffset: 30 },
-  { radiusX: 260, radiusY: 170, speed: 65, startAngle: 144, width: 280, height: 180, yOffset: 120 },
-  { radiusX: 320, radiusY: 140, speed: 50, startAngle: 216, width: 220, height: 240, yOffset: -100 },
-  { radiusX: 280, radiusY: 160, speed: 60, startAngle: 288, width: 250, height: 210, yOffset: 180 },
+  { radiusX: 340, radiusY: 150, speed: 45, startAngle: 0, width: 420, height: 320, yOffset: -80 },
+  { radiusX: 380, radiusY: 170, speed: 55, startAngle: 72, width: 340, height: 380, yOffset: 40 },
+  { radiusX: 300, radiusY: 190, speed: 65, startAngle: 144, width: 480, height: 280, yOffset: 160 },
+  { radiusX: 360, radiusY: 160, speed: 50, startAngle: 216, width: 300, height: 420, yOffset: -130 },
+  { radiusX: 320, radiusY: 180, speed: 60, startAngle: 288, width: 400, height: 340, yOffset: 220 },
 ]
 
 const pinkSquareConfig = {
-  radiusX: 200, radiusY: 100, speed: 40, startAngle: 36, size: 120, yOffset: 50,
+  radiusX: 240, radiusY: 120, speed: 40, startAngle: 36, size: 160, yOffset: 60,
 }
 
 function TornadoCard({ src, config, index }) {
