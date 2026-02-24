@@ -23,7 +23,7 @@ function OrbitGallery({ onOpen }) {
   const tiers = useMemo(() => {
     const perTier = 3
     const tierCount = Math.ceil(count / perTier)
-    const totalHeight = tierCount * 280
+    const totalHeight = tierCount * 320
     const startY = -totalHeight / 2
     const result = []
     for (let t = 0; t < tierCount; t++) {
@@ -34,7 +34,7 @@ function OrbitGallery({ onOpen }) {
         count: itemsInTier,
         radiusX: 380 + t * 50,
         radiusY: 30 + t * 8,
-        yCenter: startY + t * 280,
+        yCenter: startY + t * 320,
         speed: 12 + t * 3,
         direction: t % 2 === 0 ? 1 : -1,
         cardSize: 220 - t * 10,
@@ -67,9 +67,9 @@ function OrbitGallery({ onOpen }) {
           const y = yOrbit + tier.yCenter
 
           const depth = (Math.sin(rad) + 1) / 2
-          const scale = 0.7 + 0.35 * depth
+          const scale = 0.4 + 0.9 * depth
           const zIndex = Math.round(depth * 100)
-          const brightness = 0.25 + 0.75 * depth
+          const brightness = 0.15 + 0.85 * depth
 
           el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`
           el.style.zIndex = zIndex
