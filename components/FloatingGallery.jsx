@@ -20,63 +20,37 @@ function OrbitGallery({ onOpen }) {
   const cardsRef = useRef([])
   const count = galleryImages.length
 
-  const tiers = useMemo(() => {
-    const perTier = 3
-    const tierCount = Math.ceil(count / perTier)
-    const tierSpacing = 240
-    const totalHeight = tierCount * tierSpacing
-    const startY = -totalHeight / 2
-    const result = []
-    for (let t = 0; t < tierCount; t++) {
-      const itemsInTier = Math.min(perTier, count - t * perTier)
-      result.push({
-        items: galleryImages.slice(t * perTier, t * perTier + itemsInTier),
-        startIdx: t * perTier,
-        count: itemsInTier,
-        radiusX: 380 + t * 35,
-        radiusY: 18 + t * 4,
-        yCenter: startY + t * tierSpacing,
-        speed: 6 + t * 1.5,
-        direction: t % 2 === 0 ? 1 : -1,
-        cardSize: 200 - t * 8,
-      })
-    }
-    return result
-  }, [count])
-
   useEffect(() => {
     let animFrame
     let lastTime = performance.now()
+    const speed = 8
 
     const animate = (now) => {
       const delta = (now - lastTime) / 1000
       lastTime = now
-      angleRef.current = (angleRef.current + delta * 60) % 360
+      angleRef.current = (angleRef.current + speed * delta) % 360
 
-      for (const tier of tiers) {
-        for (let j = 0; j < tier.count; j++) {
-          const globalIdx = tier.startIdx + j
-          const el = cardsRef.current[globalIdx]
-          if (!el) continue
+      const radiusX = 500
+      const radiusY = 380
 
-          const baseAngle = (angleRef.current * tier.speed / 60) * tier.direction
-          const itemAngle = baseAngle + (j * 360) / tier.count
-          const rad = (itemAngle * Math.PI) / 180
+      for (let i = 0; i < count; i++) {
+        const el = cardsRef.current[i]
+        if (!el) continue
 
-          const x = Math.cos(rad) * tier.radiusX
-          const yOrbit = Math.sin(rad) * tier.radiusY * 0.4
-          const y = yOrbit + tier.yCenter
+        const itemAngle = angleRef.current + (i * 360) / count
+        const rad = (itemAngle * Math.PI) / 180
 
-          const depth = (Math.sin(rad) + 1) / 2
-          const scale = 0.4 + 0.9 * depth
-          const zIndex = Math.round(depth * 100)
-          const opacity = 0.3 + 0.7 * depth
+        const x = Math.cos(rad) * radiusX
+        const y = Math.sin(rad) * radiusY * 0.55
 
-          el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`
-          el.style.zIndex = zIndex
-          el.style.opacity = opacity
-          el.style.filter = 'none'
-        }
+        const depth = (Math.sin(rad) + 1) / 2
+        const scale = 0.35 + 0.95 * depth
+        const zIndex = Math.round(depth * 100)
+        const opacity = 0.25 + 0.75 * depth
+
+        el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`
+        el.style.zIndex = zIndex
+        el.style.opacity = opacity
       }
 
       animFrame = requestAnimationFrame(animate)
@@ -84,7 +58,7 @@ function OrbitGallery({ onOpen }) {
 
     animFrame = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(animFrame)
-  }, [tiers])
+  }, [count])
 
   return (
     <div
@@ -97,45 +71,41 @@ function OrbitGallery({ onOpen }) {
         height: 0,
       }}
     >
-      {galleryImages.map((src, i) => {
-        const tierIdx = Math.floor(i / 4)
-        const tier = tiers[tierIdx]
-        return (
-          <div
-            key={i}
-            ref={(el) => { cardsRef.current[i] = el }}
-            onClick={() => onOpen(i)}
+      {galleryImages.map((src, i) => (
+        <div
+          key={i}
+          ref={(el) => { cardsRef.current[i] = el }}
+          onClick={() => onOpen(i)}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: 200,
+            height: 200,
+            cursor: 'pointer',
+            borderRadius: 16,
+            overflow: 'hidden',
+            willChange: 'transform, opacity',
+          }}
+        >
+          <img
+            src={src}
+            alt={`Work ${i + 1}`}
             style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              width: tier?.cardSize ?? 300,
-              height: tier?.cardSize ?? 300,
-              cursor: 'pointer',
-              borderRadius: 16,
-              overflow: 'hidden',
-              willChange: 'transform',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
             }}
-          >
-            <img
-              src={src}
-              alt={`Work ${i + 1}`}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: 16,
-              boxShadow: 'inset 0 0 40px 15px rgba(0,0,0,0.6)',
-              pointerEvents: 'none',
-            }} />
-          </div>
-        )
-      })}
+          />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 16,
+            boxShadow: 'inset 0 0 40px 15px rgba(0,0,0,0.6)',
+            pointerEvents: 'none',
+          }} />
+        </div>
+      ))}
     </div>
   )
 }
@@ -316,7 +286,7 @@ export default function FloatingGallery() {
 
   return (
     <section style={isMobile ? {} : {
-      height: '180vh',
+      height: '100vh',
       position: 'relative',
       overflow: 'visible',
     }}>
