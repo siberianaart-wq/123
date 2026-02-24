@@ -11,37 +11,56 @@ function seededRandom(seed) {
   }
 }
 
-function generateCardConfigs(count) {
+function useScreenScale() {
+  const [scale, setScale] = useState(1)
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth
+      if (w < 480) setScale(0.38)
+      else if (w < 640) setScale(0.5)
+      else if (w < 768) setScale(0.6)
+      else if (w < 1024) setScale(0.75)
+      else setScale(1)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+  return scale
+}
+
+const baseSizes = [
+  { width: 680, height: 500 },
+  { width: 360, height: 400 },
+  { width: 440, height: 300 },
+  { width: 320, height: 440 },
+  { width: 400, height: 360 },
+  { width: 500, height: 350 },
+  { width: 380, height: 420 },
+  { width: 460, height: 310 },
+]
+
+function generateCardConfigs(count, scale) {
   const configs = []
   const rng = seededRandom(42)
-  const sizes = [
-    { width: 680, height: 500 },
-    { width: 360, height: 400 },
-    { width: 440, height: 300 },
-    { width: 320, height: 440 },
-    { width: 400, height: 360 },
-    { width: 500, height: 350 },
-    { width: 380, height: 420 },
-    { width: 460, height: 310 },
-  ]
 
   for (let i = 0; i < count; i++) {
-    const size = sizes[i % sizes.length]
+    const size = baseSizes[i % baseSizes.length]
     const angleSpread = 360 / count
     configs.push({
-      radiusX: 300 + rng() * 120,
-      radiusY: 150 + rng() * 70,
+      radiusX: (300 + rng() * 120) * scale,
+      radiusY: (150 + rng() * 70) * scale,
       speed: 40 + rng() * 30,
       startAngle: i * angleSpread,
-      width: size.width,
-      height: size.height,
-      yOffset: -100 + i * (900 / Math.max(count - 1, 1)),
+      width: size.width * scale,
+      height: size.height * scale,
+      yOffset: (-100 + i * (900 / Math.max(count - 1, 1))) * scale,
     })
   }
   return configs
 }
 
-const pinkSquareConfig = {
+const basePinkSquareConfig = {
   radiusX: 280, radiusY: 140, speed: 40, startAngle: 36, size: 180,
 }
 
@@ -113,10 +132,13 @@ function TornadoCard({ src, config, index, onOpen, layer }) {
   )
 }
 
-function PinkSquare({ yOffset }) {
+function PinkSquare({ yOffset, scale }) {
   const ref = useRef(null)
-  const angleRef = useRef(pinkSquareConfig.startAngle)
+  const angleRef = useRef(basePinkSquareConfig.startAngle)
   const selfSpin = useRef(0)
+  const scaledRadiusX = basePinkSquareConfig.radiusX * scale
+  const scaledRadiusY = basePinkSquareConfig.radiusY * scale
+  const scaledSize = basePinkSquareConfig.size * scale
 
   useEffect(() => {
     let animFrame
@@ -126,21 +148,21 @@ function PinkSquare({ yOffset }) {
     const animate = (now) => {
       const delta = (now - lastTime) / 1000
       lastTime = now
-      angleRef.current = (angleRef.current + (360 / pinkSquareConfig.speed) * delta) % 360
+      angleRef.current = (angleRef.current + (360 / basePinkSquareConfig.speed) * delta) % 360
       selfSpin.current = (selfSpin.current + selfSpinSpeed * delta) % 360
       const rad = (angleRef.current * Math.PI) / 180
-      const x = Math.cos(rad) * pinkSquareConfig.radiusX
-      const yOrbit = Math.sin(rad) * pinkSquareConfig.radiusY * 0.4
+      const x = Math.cos(rad) * scaledRadiusX
+      const yOrbit = Math.sin(rad) * scaledRadiusY * 0.4
       const y = yOrbit + yOffset
       const depth = (Math.sin(rad) + 1) / 2
-      const scale = 0.7 + 0.3 * depth
+      const s = 0.7 + 0.3 * depth
       const rotateY = Math.sin((selfSpin.current * Math.PI) / 180) * 25
       const rotateX = Math.cos((selfSpin.current * Math.PI) / 180) * 10
       const rotateZ = Math.sin(rad) * 8
 
       if (ref.current) {
-        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
-        ref.current.style.filter = `brightness(${0.35 + 0.25 * scale})`
+        ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${s})`
+        ref.current.style.filter = `brightness(${0.35 + 0.25 * s})`
       }
 
       animFrame = requestAnimationFrame(animate)
@@ -148,7 +170,7 @@ function PinkSquare({ yOffset }) {
 
     animFrame = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(animFrame)
-  }, [])
+  }, [yOffset, scaledRadiusX, scaledRadiusY])
 
   return (
     <div
@@ -157,8 +179,8 @@ function PinkSquare({ yOffset }) {
         position: 'absolute',
         left: '50%',
         top: '50%',
-        width: pinkSquareConfig.size,
-        height: pinkSquareConfig.size,
+        width: scaledSize,
+        height: scaledSize,
         transformStyle: 'preserve-3d',
         zIndex: 3,
       }}
@@ -167,8 +189,8 @@ function PinkSquare({ yOffset }) {
         width: '100%',
         height: '100%',
         background: '#e84393',
-        borderRadius: 4,
-        boxShadow: '0 12px 40px rgba(232,67,147,0.5), 0 0 80px rgba(232,67,147,0.2)',
+        borderRadius: 0,
+        boxShadow: '0 12px 40px rgba(232,67,147,0.3)',
       }} />
     </div>
   )
@@ -186,12 +208,12 @@ function Lightbox({ src, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.3 }}
       onClick={onClose}
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.9)',
+        background: 'rgba(0,0,0,0.92)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -239,9 +261,10 @@ function Lightbox({ src, onClose }) {
 export default function FloatingGallery() {
   const [mounted, setMounted] = useState(false)
   const [openIndex, setOpenIndex] = useState(null)
+  const scale = useScreenScale()
   useEffect(() => setMounted(true), [])
 
-  const cardConfigs = useMemo(() => generateCardConfigs(galleryImages.length), [])
+  const cardConfigs = useMemo(() => generateCardConfigs(galleryImages.length, scale), [scale])
   const pinkYOffset = useMemo(() => {
     if (galleryImages.length <= 1) return 0
     const mid = Math.floor(galleryImages.length / 2)
@@ -251,8 +274,8 @@ export default function FloatingGallery() {
     const maxY = cardConfigs.length > 0
       ? Math.max(...cardConfigs.map(c => c.yOffset + c.height))
       : 800
-    return Math.max(maxY + 400, 800)
-  }, [cardConfigs])
+    return Math.max(maxY + 400 * scale, 800 * scale)
+  }, [cardConfigs, scale])
 
   const handleOpen = useCallback((i) => setOpenIndex(i), [])
   const handleClose = useCallback(() => setOpenIndex(null), [])
@@ -292,7 +315,7 @@ export default function FloatingGallery() {
           width: 0,
           height: 0,
         }}>
-          <PinkSquare yOffset={pinkYOffset} />
+          <PinkSquare yOffset={pinkYOffset} scale={scale} />
           {galleryImages.map((src, i) => (
             <TornadoCard
               key={i}
