@@ -209,16 +209,6 @@ function MobileCarousel({ onOpen }) {
           msOverflowStyle: 'none',
         }}
       >
-        <div
-          style={{
-            flexShrink: 0,
-            width: '65vw',
-            height: '65vw',
-            scrollSnapAlign: 'center',
-            background: '#e84393',
-            boxShadow: '0 8px 30px rgba(232,67,147,0.3)',
-          }}
-        />
         {galleryImages.map((src, i) => (
           <div
             key={i}
