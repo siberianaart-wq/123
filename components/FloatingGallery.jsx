@@ -73,7 +73,6 @@ function TornadoCard({ src, config, index, onOpen, layer }) {
 
       if (ref.current) {
         ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
-        ref.current.style.opacity = 0.6 + 0.4 * scale
         ref.current.style.filter = `brightness(${0.25 + 0.2 * scale})`
       }
 
@@ -141,7 +140,6 @@ function PinkSquare({ yOffset }) {
 
       if (ref.current) {
         ref.current.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`
-        ref.current.style.opacity = 0.6 + 0.4 * scale
         ref.current.style.filter = `brightness(${0.35 + 0.25 * scale})`
       }
 
@@ -263,7 +261,7 @@ export default function FloatingGallery() {
     <section style={{
       height: sectionHeight,
       position: 'relative',
-      overflow: 'hidden',
+      overflow: 'visible',
     }}>
       <motion.p
         initial={{ opacity: 0 }}
