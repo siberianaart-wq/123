@@ -270,7 +270,7 @@ export default function FloatingGallery() {
         viewport={{ once: true }}
         style={{
           position: 'absolute',
-          top: '3rem',
+          top: '1.5rem',
           left: '3rem',
           fontSize: 'clamp(0.7rem, 1.2vw, 1rem)',
           letterSpacing: '0.5em',
@@ -288,7 +288,7 @@ export default function FloatingGallery() {
         <div style={{
           position: 'absolute',
           left: '50%',
-          top: '45%',
+          top: '38%',
           width: 0,
           height: 0,
         }}>
