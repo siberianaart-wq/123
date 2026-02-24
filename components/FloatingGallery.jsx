@@ -44,7 +44,7 @@ function OrbitGallery({ onOpen }) {
         const y = Math.sin(rad) * radiusY * 0.55
 
         const depth = (Math.sin(rad) + 1) / 2
-        const scale = 0.35 + 0.95 * depth
+        const scale = 0.35 + 1.45 * depth
         const zIndex = Math.round(depth * 100)
         const opacity = 0.25 + 0.75 * depth
 
@@ -66,7 +66,7 @@ function OrbitGallery({ onOpen }) {
       style={{
         position: 'absolute',
         left: '50%',
-        top: '50%',
+        top: '38%',
         width: 0,
         height: 0,
       }}
