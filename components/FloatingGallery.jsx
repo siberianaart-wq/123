@@ -1,6 +1,6 @@
 'use client'
-import { motion } from 'framer-motion'
-import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 const images = [
   '/2026-02-24_00-02-00.png',
@@ -22,7 +22,7 @@ const pinkSquareConfig = {
   radiusX: 280, radiusY: 140, speed: 40, startAngle: 36, size: 180, yOffset: 250,
 }
 
-function TornadoCard({ src, config, index }) {
+function TornadoCard({ src, config, index, onOpen }) {
   const ref = useRef(null)
   const angleRef = useRef(config.startAngle)
   const selfSpin = useRef(0)
@@ -66,6 +66,7 @@ function TornadoCard({ src, config, index }) {
   return (
     <div
       ref={ref}
+      onClick={() => onOpen(index)}
       style={{
         position: 'absolute',
         left: '50%',
@@ -73,6 +74,7 @@ function TornadoCard({ src, config, index }) {
         width: config.width,
         height: config.height,
         transformStyle: 'preserve-3d',
+        cursor: 'pointer',
       }}
     >
       <img
@@ -154,9 +156,75 @@ function PinkSquare() {
   )
 }
 
+function Lightbox({ src, onClose }) {
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [onClose])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.9)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        cursor: 'pointer',
+      }}
+    >
+      <motion.img
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.5, opacity: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        src={src}
+        alt="Expanded work"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: '85vw',
+          maxHeight: '85vh',
+          objectFit: 'contain',
+          borderRadius: 6,
+          boxShadow: '0 20px 80px rgba(0,0,0,0.8)',
+          cursor: 'default',
+        }}
+      />
+      <div style={{
+        position: 'absolute',
+        top: '2rem',
+        right: '2rem',
+        color: 'rgba(255,255,255,0.6)',
+        fontSize: '1.5rem',
+        fontWeight: 200,
+        fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        cursor: 'pointer',
+        zIndex: 1001,
+        lineHeight: 1,
+      }}
+        onClick={onClose}
+      >
+        ✕
+      </div>
+    </motion.div>
+  )
+}
+
 export default function FloatingGallery() {
   const [mounted, setMounted] = useState(false)
+  const [openIndex, setOpenIndex] = useState(null)
   useEffect(() => setMounted(true), [])
+
+  const handleOpen = useCallback((i) => setOpenIndex(i), [])
+  const handleClose = useCallback(() => setOpenIndex(null), [])
 
   return (
     <section style={{
@@ -200,10 +268,17 @@ export default function FloatingGallery() {
               src={src}
               config={cardConfigs[i]}
               index={i}
+              onOpen={handleOpen}
             />
           ))}
         </div>
       )}
+
+      <AnimatePresence>
+        {openIndex !== null && (
+          <Lightbox src={images[openIndex]} onClose={handleClose} />
+        )}
+      </AnimatePresence>
     </section>
   )
 }
