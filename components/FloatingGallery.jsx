@@ -30,8 +30,8 @@ function OrbitGallery({ onOpen }) {
       lastTime = now
       angleRef.current = (angleRef.current + speed * delta) % 360
 
-      const radiusX = 620
-      const radiusY = 450
+      const radiusX = 900
+      const radiusY = 500
 
       for (let i = 0; i < count; i++) {
         const el = cardsRef.current[i]
