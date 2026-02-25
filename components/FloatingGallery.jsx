@@ -73,15 +73,15 @@ function OrbitGallery({ onOpen }) {
       {galleryImages.map((src, i) => {
         const offset = getOffset(i)
         const absOff = Math.abs(offset)
-        const visible = absOff <= 3
+        const visible = absOff <= 2
 
         if (!visible) return null
 
-        const translateX = offset * 42
-        const translateZ = -absOff * 180
-        const rotateY = offset * -20
-        const scale = 1 - absOff * 0.15
-        const opacity = 1 - absOff * 0.25
+        const translateX = offset * 52
+        const translateZ = -absOff * 200
+        const rotateY = offset * -22
+        const scale = 1 - absOff * 0.18
+        const opacity = 1 - absOff * 0.3
         const zIndex = 10 - absOff
 
         return (
@@ -95,10 +95,10 @@ function OrbitGallery({ onOpen }) {
               position: 'absolute',
               left: '50%',
               top: '50%',
-              width: '32vw',
-              height: '32vw',
-              maxWidth: 480,
-              maxHeight: 480,
+              width: '40vw',
+              height: '40vw',
+              maxWidth: 560,
+              maxHeight: 560,
               transform: `translate(-50%, -50%) translateX(${translateX}%) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
               transition: 'all 0.7s cubic-bezier(0.25, 0.1, 0.25, 1)',
               zIndex,
