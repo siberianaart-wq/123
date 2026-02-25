@@ -15,41 +15,26 @@ function useIsMobile() {
 }
 
 function OrbitGallery({ onOpen }) {
-  const containerRef = useRef(null)
-  const angleRef = useRef(0)
-  const cardsRef = useRef([])
   const count = galleryImages.length
+  const [active, setActive] = useState(0)
+  const progressRef = useRef(0)
+  const pauseRef = useRef(false)
 
   useEffect(() => {
     let animFrame
     let lastTime = performance.now()
-    const speed = 8
+    const interval = 3500
 
     const animate = (now) => {
-      const delta = (now - lastTime) / 1000
+      const delta = now - lastTime
       lastTime = now
-      angleRef.current = (angleRef.current + speed * delta) % 360
 
-      const radiusX = 900
-      const radiusY = 500
-
-      for (let i = 0; i < count; i++) {
-        const el = cardsRef.current[i]
-        if (!el) continue
-
-        const itemAngle = angleRef.current + (i * 360) / count
-        const rad = (itemAngle * Math.PI) / 180
-
-        const x = Math.cos(rad) * radiusX
-        const y = Math.sin(rad) * radiusY * 0.55
-
-        const depth = (Math.sin(rad) + 1) / 2
-        const scale = 0.35 + 1.45 * depth
-        const zIndex = Math.round(depth * 100)
-
-        el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`
-        el.style.zIndex = zIndex
-        el.style.opacity = 1
+      if (!pauseRef.current) {
+        progressRef.current += delta
+        if (progressRef.current >= interval) {
+          progressRef.current = 0
+          setActive((a) => (a + 1) % count)
+        }
       }
 
       animFrame = requestAnimationFrame(animate)
@@ -59,52 +44,92 @@ function OrbitGallery({ onOpen }) {
     return () => cancelAnimationFrame(animFrame)
   }, [count])
 
+  const getOffset = (index) => {
+    let diff = index - active
+    if (diff > count / 2) diff -= count
+    if (diff < -count / 2) diff += count
+    return diff
+  }
+
+  const goTo = (i) => {
+    setActive(i)
+    progressRef.current = 0
+  }
+
   return (
     <div
-      ref={containerRef}
       style={{
         position: 'absolute',
-        left: '50%',
-        top: '38%',
-        width: 0,
-        height: 0,
+        left: 0,
+        right: 0,
+        top: '8%',
+        bottom: 0,
+        overflow: 'hidden',
+        perspective: '1200px',
       }}
+      onMouseEnter={() => { pauseRef.current = true }}
+      onMouseLeave={() => { pauseRef.current = false; progressRef.current = 0 }}
     >
-      {galleryImages.map((src, i) => (
-        <div
-          key={i}
-          ref={(el) => { cardsRef.current[i] = el }}
-          onClick={() => onOpen(i)}
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            width: 200,
-            height: 200,
-            cursor: 'pointer',
-            borderRadius: 16,
-            overflow: 'hidden',
-            willChange: 'transform, opacity',
-          }}
-        >
-          <img
-            src={src}
-            alt={`Work ${i + 1}`}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
+      {galleryImages.map((src, i) => {
+        const offset = getOffset(i)
+        const absOff = Math.abs(offset)
+        const visible = absOff <= 3
+
+        if (!visible) return null
+
+        const translateX = offset * 42
+        const translateZ = -absOff * 180
+        const rotateY = offset * -20
+        const scale = 1 - absOff * 0.15
+        const opacity = 1 - absOff * 0.25
+        const zIndex = 10 - absOff
+
+        return (
+          <div
+            key={i}
+            onClick={() => {
+              if (offset === 0) onOpen(i)
+              else goTo(i)
             }}
-          />
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: 16,
-            boxShadow: 'inset 0 0 40px 15px rgba(0,0,0,0.6)',
-            pointerEvents: 'none',
-          }} />
-        </div>
-      ))}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              width: '32vw',
+              height: '32vw',
+              maxWidth: 480,
+              maxHeight: 480,
+              transform: `translate(-50%, -50%) translateX(${translateX}%) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+              transition: 'all 0.7s cubic-bezier(0.25, 0.1, 0.25, 1)',
+              zIndex,
+              opacity,
+              cursor: 'pointer',
+              borderRadius: 16,
+              overflow: 'hidden',
+              transformStyle: 'preserve-3d',
+            }}
+          >
+            <img
+              src={src}
+              alt={`Work ${i + 1}`}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                filter: offset === 0 ? 'brightness(1)' : 'brightness(0.6)',
+                transition: 'filter 0.7s ease',
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: 16,
+              boxShadow: 'inset 0 0 40px 15px rgba(0,0,0,0.6)',
+              pointerEvents: 'none',
+            }} />
+          </div>
+        )
+      })}
     </div>
   )
 }
