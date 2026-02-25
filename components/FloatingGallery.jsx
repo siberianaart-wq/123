@@ -1,6 +1,7 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import Link from 'next/link'
 import galleryImages from '../gallery.config'
 
 function useIsMobile() {
@@ -314,31 +315,31 @@ export default function FloatingGallery() {
       position: 'relative',
       overflow: 'visible',
     }}>
-      <motion.p
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        viewport={{ once: true }}
-        style={{
-          ...(isMobile ? {
-            padding: '0 1.5rem',
-            marginBottom: '0.5rem',
-          } : {
-            position: 'absolute',
-            top: '1.5rem',
-            left: '3rem',
-          }),
-          fontSize: 'clamp(0.7rem, 1.2vw, 1rem)',
-          letterSpacing: '0.5em',
-          fontWeight: 300,
-          color: 'rgba(255,255,255,0.5)',
-          fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-          margin: isMobile ? '0 0 0 1.5rem' : 0,
-          zIndex: 20,
-        }}
-      >
-        WORKS
-      </motion.p>
+      <Link href="/gallery" style={{ textDecoration: 'none', ...(isMobile ? {} : { position: 'absolute', top: '1.5rem', left: '3rem', zIndex: 20 }) }}>
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          viewport={{ once: true }}
+          whileHover={{ color: '#e84393' }}
+          style={{
+            ...(isMobile ? {
+              padding: '0 1.5rem',
+              marginBottom: '0.5rem',
+            } : {}),
+            fontSize: 'clamp(0.7rem, 1.2vw, 1rem)',
+            letterSpacing: '0.5em',
+            fontWeight: 300,
+            color: 'rgba(255,255,255,0.5)',
+            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            margin: isMobile ? '0 0 0 1.5rem' : 0,
+            cursor: 'pointer',
+            transition: 'color 0.3s ease',
+          }}
+        >
+          ART PROJECTS
+        </motion.p>
+      </Link>
 
       {mounted && !isMobile && (
         <OrbitGallery onOpen={handleOpen} />
